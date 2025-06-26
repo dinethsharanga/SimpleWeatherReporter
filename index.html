@@ -4,23 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Colombo Weather Reporter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+    </style>
 </head>
 <body>
 
-    <h1>Weather in <span id="location-name">Colombo, Sri Lanka</span></h1>
-    <p >Temperature</p>
-    <p id="temperature"></p>
-    <p>Condition</p>
-    <p id="condition"></p>
-    <p >Humidity</p>
-    <p id="humidity"></p>
-    <p >Wind Speed</p>
-    <p id="wind-speed"></p>
-    <p >UV Index</p>
-    <p id="uv-index"></p>
+    <div class="weather-card bg-gradient-to-br from-blue-400 to-indigo-600 p-8 rounded-2xl shadow-xl text-white w-full max-w-md mx-auto relative overflow-hidden transform transition-all duration-300 hover:scale-[1.01]">
 
-    <input type="text" id="city-search" placeholder="Enter city name..." >
-    <button id="search-button" >Search</button>
+        <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center z-10 relative">Weather in <span id="location-name">Colombo, Sri Lanka</span></h1>
+
+        <div id="weather-display" class="flex flex-col items-center space-y-4 z-10 relative" style="display: none;">
+
+
+            <p id="temperature" class="text-5xl font-extrabold"></p>
+            <p id="condition" class="text-xl font-medium"></p>
+
+            <div class="grid grid-cols-2 gap-4 w-full mt-6">
+                <div class="bg-white bg-opacity-20 p-4 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">💧</span>
+                    <p class="text-lg font-semibold">Humidity</p>
+                    <p id="humidity" class="text-xl"></p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-4 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">🌬️</span>
+                    <p class="text-lg font-semibold">Wind Speed</p>
+                    <p id="wind-speed" class="text-xl"></p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-4 rounded-xl flex flex-col items-center col-span-2">
+                    <span class="text-2xl mb-1">☀️</span>
+                    <p class="text-lg font-semibold">UV Index</p>
+                    <p id="uv-index" class="text-xl"></p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Search Bar with Suggestions -->
+        <div class="mt-8 relative z-10">
+            <div class="flex rounded-xl overflow-hidden shadow-lg">
+                <input type="text" id="city-search" placeholder="Enter city name..." class="flex-grow p-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-l-xl">
+                <button id="search-button" class="bg-blue-600 hover:bg-blue-700 text-white p-4 font-semibold rounded-r-xl transition-colors duration-200">Search</button>
+            </div>
+        </div>
+
+    </div>
 
     <script>
         
@@ -36,12 +79,14 @@
         const uvIndexElem = document.getElementById('uv-index');
 
         const conditionElem = document.getElementById('condition');
+        const weatherDisplay = document.getElementById('weather-display');
 
         const citySearchInput = document.getElementById('city-search');
         const searchButton = document.getElementById('search-button');
 
         // Function to fetch weather data
         async function fetchWeatherData(location) {
+            weatherDisplay.style.display = 'none';    // Hide weather info
             try {
                 const response = await fetch(`${CURRENT_WEATHER_PROXY_URL}?q=${encodeURIComponent(location)}`);
                 const data = await response.json();
@@ -68,6 +113,8 @@
             windSpeedElem.textContent = `${current.wind_kph} km/h`;
             uvIndexElem.textContent = current.uv;
             conditionElem.textContent = current.condition.text;
+
+            weatherDisplay.style.display = 'flex'; // Show weather info
 
         }
 
