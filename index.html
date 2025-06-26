@@ -21,6 +21,13 @@
             box-sizing: border-box;
         }
 
+        /* Style for weather icon image */
+        #weather-icon img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
     </style>
 </head>
 <body>
@@ -36,7 +43,7 @@
 
         <div id="weather-display" class="flex flex-col items-center space-y-4 z-10 relative" style="display: none;">
 
-
+            <div id="weather-icon" class="mb-2 flex justify-center items-center h-20 w-20"></div>
             <p id="temperature" class="text-5xl font-extrabold"></p>
             <p id="condition" class="text-xl font-medium"></p>
 
@@ -86,6 +93,7 @@
         const conditionElem = document.getElementById('condition');
         const weatherDisplay = document.getElementById('weather-display');
         const loadingIndicator = document.getElementById('loading-indicator');
+        const weatherIconElem = document.getElementById('weather-icon');
 
         const citySearchInput = document.getElementById('city-search');
         const searchButton = document.getElementById('search-button');
@@ -122,6 +130,23 @@
             windSpeedElem.textContent = `${current.wind_kph} km/h`;
             uvIndexElem.textContent = current.uv;
             conditionElem.textContent = current.condition.text;
+
+            // Update weather icon based on condition
+            // Clear previous icon
+            weatherIconElem.innerHTML = ''; 
+            // Create image element for the weather icon
+            const iconImg = document.createElement('img');
+            iconImg.src = current.condition.icon;
+            iconImg.alt = current.condition.text;
+            iconImg.title = current.condition.text;
+
+            // onerror fallback for the image
+            iconImg.onerror = () => {
+                iconImg.style.display = 'none'; // Hide broken image
+                console.error('Failed to load weather icon image.');
+            };
+
+            weatherIconElem.appendChild(iconImg); // Add image to the icon container
 
             weatherDisplay.style.display = 'flex'; // Show weather info
 
