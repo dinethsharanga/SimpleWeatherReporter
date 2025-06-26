@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colombo Weather Reporter</title>
+</head>
+<body>
+
+    <h1>Weather in Colombo, Sri Lanka</h1>
+    <p id="location-name"></p>
+    <p >Temperature</p>
+    <p id="temperature"></p>
+    <p>Condition</p>
+    <p id="condition"></p>
+    <p >Humidity</p>
+    <p id="humidity"></p>
+    <p >Wind Speed</p>
+    <p id="wind-speed"></p>
+    <p >UV Index</p>
+    <p id="uv-index"></p>
+
+    <script>
+        
+        // Weather API Configuration
+        const WEATHER_API_KEY = '';
+        const WEATHER_CURRENT_API_BASE_URL = 'https://api.weatherapi.com/v1/current.json';
+
+        // DOM Elements
+        const locationNameElem = document.getElementById('location-name');
+
+        const temperatureElem = document.getElementById('temperature');
+        const humidityElem = document.getElementById('humidity');
+        const windSpeedElem = document.getElementById('wind-speed');
+        const uvIndexElem = document.getElementById('uv-index');
+
+        const conditionElem = document.getElementById('condition');
+
+        // Function to fetch weather data
+        async function fetchWeatherData(location) {
+            try {
+                // Determine API key source
+                const apiKey = typeof __api_key !== 'undefined' ? __api_key : WEATHER_API_KEY;
+
+                if (!apiKey) {
+                    return;
+                }
+
+                const response = await fetch(`${WEATHER_CURRENT_API_BASE_URL}?key=${apiKey}&q=${encodeURIComponent(location)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayWeatherData(data);
+                } else {
+                    // Handle API errors (Eg. city not found, invalid key)
+                    console.error('Weather API Error:', data);
+                }
+            } catch (error) {
+                console.error('Network or Fetch Error:', error);
+            }
+        }
+
+        // Function to display weather data
+        function displayWeatherData(data) {
+
+            const { location, current } = data;
+
+            locationNameElem.textContent = `${location.name}, ${location.country}`;
+            temperatureElem.textContent = `${current.temp_c}°C`;
+            humidityElem.textContent = `${current.humidity}%`;
+            windSpeedElem.textContent = `${current.wind_kph} km/h`;
+            uvIndexElem.textContent = current.uv;
+            conditionElem.textContent = current.condition.text;
+
+        }
+
+        // Fetch weather for Colombo on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWeatherData('Colombo, Sri Lanka');
+        });
+    </script>
+
+</body>
+</html>
