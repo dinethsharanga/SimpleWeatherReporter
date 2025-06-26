@@ -7,8 +7,7 @@
 </head>
 <body>
 
-    <h1>Weather in Colombo, Sri Lanka</h1>
-    <p id="location-name"></p>
+    <h1>Weather in <span id="location-name">Colombo, Sri Lanka</span></h1>
     <p >Temperature</p>
     <p id="temperature"></p>
     <p>Condition</p>
@@ -19,6 +18,9 @@
     <p id="wind-speed"></p>
     <p >UV Index</p>
     <p id="uv-index"></p>
+
+    <input type="text" id="city-search" placeholder="Enter city name..." >
+    <button id="search-button" >Search</button>
 
     <script>
         
@@ -34,6 +36,9 @@
         const uvIndexElem = document.getElementById('uv-index');
 
         const conditionElem = document.getElementById('condition');
+
+        const citySearchInput = document.getElementById('city-search');
+        const searchButton = document.getElementById('search-button');
 
         // Function to fetch weather data
         async function fetchWeatherData(location) {
@@ -65,6 +70,25 @@
             conditionElem.textContent = current.condition.text;
 
         }
+
+        // Event Listeners
+
+        // Event listener for search button
+        searchButton.addEventListener('click', () => {
+            const city = citySearchInput.value.trim();
+            if (city) {
+                fetchWeatherData(city);
+            } else {
+                showMessage('Please enter a city name.', 'info');
+            }
+        });
+
+        // Event listener for 'Enter' key in search input
+        citySearchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                searchButton.click(); // Trigger button click
+            }
+        });
 
         // Fetch weather for Colombo on page load
         document.addEventListener('DOMContentLoaded', () => {
