@@ -29,6 +29,11 @@
 
         <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center z-10 relative">Weather in <span id="location-name">Colombo, Sri Lanka</span></h1>
 
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="flex justify-center items-center h-48" style="display: none;">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+        </div>
+
         <div id="weather-display" class="flex flex-col items-center space-y-4 z-10 relative" style="display: none;">
 
 
@@ -80,12 +85,14 @@
 
         const conditionElem = document.getElementById('condition');
         const weatherDisplay = document.getElementById('weather-display');
+        const loadingIndicator = document.getElementById('loading-indicator');
 
         const citySearchInput = document.getElementById('city-search');
         const searchButton = document.getElementById('search-button');
 
         // Function to fetch weather data
         async function fetchWeatherData(location) {
+            loadingIndicator.style.display = 'flex'; // Show loading
             weatherDisplay.style.display = 'none';    // Hide weather info
             try {
                 const response = await fetch(`${CURRENT_WEATHER_PROXY_URL}?q=${encodeURIComponent(location)}`);
@@ -99,6 +106,8 @@
                 }
             } catch (error) {
                 console.error('Network or Fetch Error:', error);
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading
             }
         }
 
