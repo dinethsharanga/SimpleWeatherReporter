@@ -28,11 +28,31 @@
             object-fit: contain;
         }
 
+        /* Custom styles for the city suggestions dropdown */
+        .suggestions-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0; /* light gray */
+            border-top: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 99;
+        }
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            background-color: white;
+            color: #4a5568; /* gray-700 */
+            transition: background-color 0.2s ease;
+        }
+        .suggestion-item:hover {
+            background-color: #edf2f7; /* gray-100 */
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="weather-card bg-gradient-to-br from-blue-400 to-indigo-600 p-8 rounded-2xl shadow-xl text-white w-full max-w-md mx-auto relative overflow-hidden transform transition-all duration-300 hover:scale-[1.01]">
+    <div class="weather-card bg-gradient-to-br from-blue-400 to-indigo-600 p-8 rounded-2xl shadow-xl text-white w-full max-w-md mx-auto relative transform transition-all duration-300 hover:scale-[1.01]"> <!--overflow-hidden-->
 
         <h1 class="text-3xl md:text-4xl font-bold mb-6 text-center z-10 relative">Weather in <span id="location-name">Colombo, Sri Lanka</span></h1>
 
@@ -73,6 +93,10 @@
                 <input type="text" id="city-search" placeholder="Enter city name..." class="flex-grow p-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded-l-xl">
                 <button id="search-button" class="bg-blue-600 hover:bg-blue-700 text-white p-4 font-semibold rounded-r-xl transition-colors duration-200">Search</button>
             </div>
+            <!-- City Suggestions Dropdown -->
+            <div id="city-suggestions" class="suggestions-container absolute w-full bg-white rounded-b-xl overflow-hidden mt-1 shadow-lg border border-gray-200" style="display: none;">
+                <!-- Suggestions space -->
+            </div>
         </div>
 
     </div>
@@ -81,6 +105,7 @@
         
         // Weather API Configuration
         const CURRENT_WEATHER_PROXY_URL = '/api/current-weather';
+        const SEARCH_CITIES_PROXY_URL = '/api/search-cities';
 
         // DOM Elements
         const locationNameElem = document.getElementById('location-name');
@@ -97,11 +122,13 @@
 
         const citySearchInput = document.getElementById('city-search');
         const searchButton = document.getElementById('search-button');
+        const citySuggestionsContainer = document.getElementById('city-suggestions');
 
         // Function to fetch weather data
         async function fetchWeatherData(location) {
             loadingIndicator.style.display = 'flex'; // Show loading
             weatherDisplay.style.display = 'none';    // Hide weather info
+            citySuggestionsContainer.style.display = 'none'; // Hide suggestions if open
             try {
                 const response = await fetch(`${CURRENT_WEATHER_PROXY_URL}?q=${encodeURIComponent(location)}`);
                 const data = await response.json();
@@ -152,6 +179,66 @@
 
         }
 
+        // City Suggestions Logic
+        let debounceTimer;
+        const DEBOUNCE_DELAY = 300; // milliseconds
+
+        /**
+         * Fetches city suggestions based on the input query.
+         * @param {string} query The search string from the user input.
+         */
+        async function fetchCitySuggestions(query) {
+            if (query.length < 2) { // Only search if query is at least 2 characters long
+                displayCitySuggestions([]); // Clear suggestions if query too short
+                return;
+            }
+
+            try {
+                // Call for city search
+                const response = await fetch(`${SEARCH_CITIES_PROXY_URL}?q=${encodeURIComponent(query)}`);
+                const suggestions = await response.json(); // This API returns an array of objects
+
+                if (response.ok) {
+                    displayCitySuggestions(suggestions);
+                } else {
+                    console.error('Proxy City Search Error:', suggestions.error ? suggestions.error.message : 'Unknown error');
+                    displayCitySuggestions([]);
+                }
+            } catch (error) {
+                console.error('Network or Proxy Search Fetch Error:', error);
+                displayCitySuggestions([]);
+            }
+        }
+
+        /**
+         * Displays the fetched city suggestions in the dropdown.
+         * @param {Array<Object>} suggestions An array of city objects from the API.
+         */
+        function displayCitySuggestions(suggestions) {
+            citySuggestionsContainer.innerHTML = ''; // Clear previous suggestions
+
+            if (suggestions && suggestions.length > 0) {
+                suggestions.forEach(city => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.classList.add('suggestion-item');
+                    // Display name, region, and country for better context
+                    suggestionItem.textContent = `${city.name}, ${city.region || ''}${city.region ? ', ' : ''}${city.country}`;
+                    suggestionItem.dataset.cityName = city.name; // Store the city name for selection
+
+                    suggestionItem.addEventListener('mousedown', (e) => { // Use mousedown to prevent blur from hiding it
+                        e.preventDefault(); // Prevent input from losing focus
+                        citySearchInput.value = suggestionItem.dataset.cityName; // Set input to selected city name
+                        citySuggestionsContainer.style.display = 'none'; // Hide suggestions
+                        fetchWeatherData(citySearchInput.value); // Fetch weather for selected city
+                    });
+                    citySuggestionsContainer.appendChild(suggestionItem);
+                });
+                citySuggestionsContainer.style.display = 'block'; // Show the suggestions container
+            } else {
+                citySuggestionsContainer.style.display = 'none'; // Hide if no suggestions
+            }
+        }
+
         // Event Listeners
 
         // Event listener for search button
@@ -168,6 +255,34 @@
         citySearchInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 searchButton.click(); // Trigger button click
+            }
+        });
+
+        // Event listener for input changes in the search box (with debouncing)
+        citySearchInput.addEventListener('input', (event) => {
+            clearTimeout(debounceTimer); // Clear any existing timer
+            const query = event.target.value.trim();
+            if (query.length > 1) { // Start suggesting after 1 character
+                debounceTimer = setTimeout(() => {
+                    fetchCitySuggestions(query);
+                }, DEBOUNCE_DELAY);
+            } else {
+                displayCitySuggestions([]); // Clear suggestions if input is too short
+                citySuggestionsContainer.style.display = 'none'; // Hide suggestions container
+            }
+        });
+
+        // Hide suggestions when the input field loses focus
+        citySearchInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                citySuggestionsContainer.style.display = 'none';
+            }, 100);
+        });
+
+        // Show suggestions again if input is focused and has content, and there are suggestions
+        citySearchInput.addEventListener('focus', () => {
+            if (citySearchInput.value.trim().length > 1 && citySuggestionsContainer.children.length > 0) {
+                citySuggestionsContainer.style.display = 'block';
             }
         });
 
