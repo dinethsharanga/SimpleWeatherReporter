@@ -1,6 +1,6 @@
 # SimpleWeatherReporter
 
-The SimpleWeatherReporter is a web application that displays current weather infromation for Colombo.
+The SimpleWeatherReporter is a web application that displays current weather information for Colombo.
 
 ## Link to the app
 
