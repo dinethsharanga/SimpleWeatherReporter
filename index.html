@@ -135,6 +135,8 @@
 
                 if (response.ok) {
                     displayWeatherData(data);
+                    // clear search input after successful submission
+                    citySearchInput.value = '';
                 } else {
                     // Handle API errors (Eg. city not found, invalid key)
                     console.error('Weather API Error:', data);
