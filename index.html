@@ -48,6 +48,22 @@
             background-color: #edf2f7; /* gray-100 */
         }
 
+        /* Styles for expandable section */
+        .additional-data-section {
+            display: none; /* Hidden by default */
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transform: translateY(-10px);
+        }
+        .additional-data-section.expanded {
+            display: grid; /* Changed to grid when expanded */
+            opacity: 1;
+            max-height: 200px;
+            transform: translateY(0);
+        }
+
     </style>
 </head>
 <body>
@@ -82,6 +98,24 @@
                     <span class="text-2xl mb-1">☀️</span>
                     <p class="text-lg font-semibold">UV Index</p>
                     <p id="uv-index" class="text-xl"></p>
+                </div>
+            </div>
+
+            <button id="toggle-additional-data" class="mt-6 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                Show More Details
+            </button>
+
+            <!-- Additional Data Section (initially hidden) -->
+            <div id="additional-data-section" class="additional-data-section grid grid-cols-2 gap-4 w-full mt-4">
+                <div class="bg-white bg-opacity-20 p-4 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">🌡️</span>
+                    <p class="text-lg font-semibold">Feels Like</p>
+                    <p id="feels-like" class="text-xl"></p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-4 rounded-xl flex flex-col items-center">
+                    <span class="text-2xl mb-1">📊</span>
+                    <p class="text-lg font-semibold">Pressure</p>
+                    <p id="pressure" class="text-xl"></p>
                 </div>
             </div>
 
@@ -124,11 +158,19 @@
         const searchButton = document.getElementById('search-button');
         const citySuggestionsContainer = document.getElementById('city-suggestions');
 
+        const toggleAdditionalDataButton = document.getElementById('toggle-additional-data');
+        const additionalDataSection = document.getElementById('additional-data-section');
+        const feelsLikeElem = document.getElementById('feels-like');
+        const pressureElem = document.getElementById('pressure');
+
         // Function to fetch weather data
         async function fetchWeatherData(location) {
             loadingIndicator.style.display = 'flex'; // Show loading
             weatherDisplay.style.display = 'none';    // Hide weather info
             citySuggestionsContainer.style.display = 'none'; // Hide suggestions if open
+            // Reset additional data section on new fetch
+            additionalDataSection.classList.remove('expanded');
+            toggleAdditionalDataButton.textContent = 'Show More Details';
             try {
                 const response = await fetch(`${CURRENT_WEATHER_PROXY_URL}?q=${encodeURIComponent(location)}`);
                 const data = await response.json();
@@ -159,6 +201,8 @@
             windSpeedElem.textContent = `${current.wind_kph} km/h`;
             uvIndexElem.textContent = current.uv;
             conditionElem.textContent = current.condition.text;
+            feelsLikeElem.textContent = `${current.feelslike_c}°C`;
+            pressureElem.textContent = `${current.pressure_mb} mb`;
 
             // Update weather icon based on condition
             // Clear previous icon
@@ -179,6 +223,17 @@
 
             weatherDisplay.style.display = 'flex'; // Show weather info
 
+        }
+
+        // Toggle function for additional data
+        function toggleAdditionalData() {
+            if (additionalDataSection.classList.contains('expanded')) {
+                additionalDataSection.classList.remove('expanded');
+                toggleAdditionalDataButton.textContent = 'Show More Details';
+            } else {
+                additionalDataSection.classList.add('expanded');
+                toggleAdditionalDataButton.textContent = 'Show Less Details';
+            }
         }
 
         // City Suggestions Logic
@@ -287,6 +342,9 @@
                 citySuggestionsContainer.style.display = 'block';
             }
         });
+
+        // Event listener for toggle button
+        toggleAdditionalDataButton.addEventListener('click', toggleAdditionalData);
 
         // Fetch weather for Colombo on page load
         document.addEventListener('DOMContentLoaded', () => {
